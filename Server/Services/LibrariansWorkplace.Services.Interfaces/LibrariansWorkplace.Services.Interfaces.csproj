@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\LibrariansWorkplace.Domain.Interfaces\LibrariansWorkplace.Domain.Interfaces.csproj" />
+    <ProjectReference Include="..\..\Domain\LibrariansWorkplace.Domain\LibrariansWorkplace.Domain.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\LibrariansWorkplace.Infrastructure.Data\LibrariansWorkplace.Infrastructure.Data.csproj" />
+  </ItemGroup>
+
+</Project>
