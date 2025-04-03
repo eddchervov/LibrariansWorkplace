@@ -1,3 +1,4 @@
+using LibrariansWorkplace.Domain;
 using LibrariansWorkplace.Domain.Interfaces;
 using LibrariansWorkplace.Infrastructure.BL;
 using LibrariansWorkplace.Infrastructure.BL.Books;
@@ -8,6 +9,7 @@ using LibrariansWorkplace.Services.Interfaces.Readers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Reflection.Metadata;
 
 namespace LibrariansWorkplace.Web
 {
@@ -17,13 +19,32 @@ namespace LibrariansWorkplace.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                  options.UseNpgsql(connectionString, npgsqlOptionsAction: option =>
                  {
                      option.MigrationsAssembly(typeof(Program).GetTypeInfo().Assembly.GetName().Name);
+                 })
+                 .UseSeeding((context, _) =>
+                 {
+                     if (context.Set<Book>().Any() == false)
+                     {
+                         context.Set<Book>().Add(new Book { Author = "Александр Куприн", Name = "Гранатовый браслет", CountCopies = 20, YearPublication = 1990 });
+                         context.Set<Book>().Add(new Book { Author = "Федор Достоевский", Name = "Бедные люди", CountCopies = 20, YearPublication = 1982 });
+                         context.Set<Book>().Add(new Book { Author = "Владимир Даль", Name = "Русские сказки", CountCopies = 20, YearPublication = 1976 });
+                         context.Set<Book>().Add(new Book { Author = "Александр Пушкин", Name = "Руслан и Людмила", CountCopies = 20, YearPublication = 1967 });
+                     }
+
+                     if (context.Set<Book>().Any() == false)
+                     {
+                         context.Set<Reader>().Add(new Reader { FullName = "Иванов Иван Иванович", DateBirth = new DateTime(1990, 1, 16).ToUniversalTime() });
+                         context.Set<Reader>().Add(new Reader { FullName = "Петрова Мария Александровна", DateBirth = new DateTime(1987, 4, 4).ToUniversalTime() });
+                         context.Set<Reader>().Add(new Reader { FullName = "Сидров Игорь Валерьевич", DateBirth = new DateTime(1992, 10, 10).ToUniversalTime() });
+                     }
+
+                     context.SaveChanges();
                  }));
 
             builder.Services.AddControllers();
@@ -33,6 +54,14 @@ namespace LibrariansWorkplace.Web
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "LibrariansWorkplace.Web", Version = "v1" });
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .SetIsOriginAllowed(origin => true) // allow any origin
+                        .AllowAnyHeader());
+            });
 
             builder.Services.AddSingleton<ISystemClock, SystemClock>();
 
@@ -51,6 +80,8 @@ namespace LibrariansWorkplace.Web
 
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LibrariansWorkplace.Web v1"));
+
+            app.UseCors("CorsPolicy");
 
             app.MapControllerRoute(
                 name: "default",

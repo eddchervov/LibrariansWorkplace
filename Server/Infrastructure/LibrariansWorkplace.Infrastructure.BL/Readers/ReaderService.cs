@@ -16,9 +16,15 @@ public class ReaderService : IReaderService
         _unitOfWork = unitOfWork;
     }
 
+    public async Task<IEnumerable<ReaderOptionDto>> GetOptions()
+    {
+        var readers = await _unitOfWork.ReaderRepository.GetAll();
+        return readers.Select(x => new ReaderOptionDto { Id = x.Id, Name = x.FullName }).OrderBy(x => x.Name);
+    }
+
     public async Task<GetReaderDto> GetById(int id)
     {
-        var reader = (await _unitOfWork.ReaderRepository.Get(id)) ?? throw new ReaderNotFoundException(id);
+        var reader = (await _unitOfWork.ReaderRepository.GetFull(id)) ?? throw new ReaderNotFoundException(id);
 
         var issuedBooks = reader.IssuedBooks.Where(x => x.IsDeleted == false);
 
@@ -27,7 +33,7 @@ public class ReaderService : IReaderService
 
     public async Task<IEnumerable<GetReaderDto>> SearchByFullName(string search)
     {
-        if (string.IsNullOrEmpty(search)) return Enumerable.Empty<GetReaderDto>();
+        if (string.IsNullOrEmpty(search.Trim())) return [];
 
         var readers = await _unitOfWork.ReaderRepository.SearchByFullName(search);
 
@@ -55,19 +61,24 @@ public class ReaderService : IReaderService
     {
         ValidationOnUpdate(dto);
 
-        var book = (await _unitOfWork.ReaderRepository.Get(readerId)) ?? throw new ReaderNotFoundException(readerId);
+        var reader = (await _unitOfWork.ReaderRepository.Get(readerId)) ?? throw new ReaderNotFoundException(readerId);
 
-        book.DateBirth = dto.DateBirth;
-        book.FullName = dto.FullName;
+        reader.DateBirth = dto.DateBirth;
+        reader.FullName = dto.FullName;
 
         await _unitOfWork.ReaderRepository.Save();
     }
 
     public async Task Delete(int id)
     {
-        var book = (await _unitOfWork.ReaderRepository.Get(id)) ?? throw new ReaderNotFoundException(id);
+        var reader = (await _unitOfWork.ReaderRepository.GetFull(id)) ?? throw new ReaderNotFoundException(id);
 
-        book.IsDeleted = true;
+        if (reader.IssuedBooks.Any(x => x.IsDeleted == false))
+        {
+            throw new YouCannotRemoveReaderBecauseThereAreUndeliveredBooksException(reader.Id);
+        }
+
+        reader.IsDeleted = true;
 
         await _unitOfWork.ReaderRepository.Save();
     }
@@ -81,7 +92,6 @@ public class ReaderService : IReaderService
             Id = reader.Id,
             DateBirth = reader.DateBirth,
             FullName = reader.FullName,
-            IsDeleted = reader.IsDeleted,
             IssuedBooks = issuedBooks.Select(MapToDto) // PS отдаем и повторяющиеся, так как у них разные даты выдачи
         };
     }
@@ -102,13 +112,13 @@ public class ReaderService : IReaderService
         };
     } 
 
-    private void ValidationOnUpdate(UpdateReaderDto dto)
+    private static void ValidationOnUpdate(UpdateReaderDto dto)
     {
         ValidationName(dto.FullName);
         ValidationDateBirth(dto.DateBirth);
     }
 
-    private void ValidationOnCreation(CreateReaderDto dto)
+    private static void ValidationOnCreation(CreateReaderDto dto)
     {
         ValidationName(dto.FullName);
         ValidationDateBirth(dto.DateBirth);
@@ -122,7 +132,7 @@ public class ReaderService : IReaderService
         }
     }
 
-    private void ValidationDateBirth(DateTime dateBirth)
+    private static void ValidationDateBirth(DateTime dateBirth)
     {
         if (dateBirth < Reader.MinDateBirth || dateBirth > Reader.MaxDateBirth)
         {

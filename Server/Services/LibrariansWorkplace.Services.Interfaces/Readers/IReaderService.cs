@@ -6,6 +6,7 @@ public interface IReaderService
 {
     Task<GetReaderDto> GetById(int id);
     Task<IEnumerable<GetReaderDto>> SearchByFullName(string search);
+    Task<IEnumerable<ReaderOptionDto>> GetOptions();
     Task<int> Create(CreateReaderDto dto);
     Task Update(int readerId, UpdateReaderDto dto);
     Task Delete(int id);

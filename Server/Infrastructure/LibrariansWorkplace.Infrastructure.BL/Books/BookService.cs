@@ -27,7 +27,7 @@ public class BookService : IBookService
 
     public async Task<IEnumerable<GetBookDto>> SearchByName(string search)
     {
-        if (string.IsNullOrEmpty(search)) return Enumerable.Empty<GetBookDto>();
+        if (string.IsNullOrEmpty(search)) return [];
 
         var books = await _unitOfWork.BookRepository.SearchByName(search);
 
@@ -36,7 +36,7 @@ public class BookService : IBookService
 
     public async Task<IEnumerable<GetIssuedBooksDto>> GetIssuedBooks()
     {
-        var books = await _unitOfWork.BookRepository.Get();
+        var books = await _unitOfWork.BookRepository.GetFull();
 
         var result = new List<GetIssuedBooksDto>();
         foreach (var book in books) 
@@ -61,7 +61,7 @@ public class BookService : IBookService
 
     public async Task<IEnumerable<GetAvailableBooksDto>> GetAvailableBooks()
     {
-        var books = await _unitOfWork.BookRepository.Get();
+        var books = await _unitOfWork.BookRepository.GetFull();
 
         var result = new List<GetAvailableBooksDto>();
         foreach (var book in books)
@@ -107,7 +107,7 @@ public class BookService : IBookService
 
     public async Task Update(int bookId, UpdateBookDto dto)
     {
-        var book = (await _unitOfWork.BookRepository.Get(bookId)) ?? throw new BookNotFoundException(bookId);
+        var book = (await _unitOfWork.BookRepository.GetFull(bookId)) ?? throw new BookNotFoundException(bookId);
 
         ValidationOnUpdate(dto, book);
 
@@ -121,7 +121,12 @@ public class BookService : IBookService
 
     public async Task Delete(int id)
     {
-        var book = (await _unitOfWork.BookRepository.Get(id)) ?? throw new BookNotFoundException(id);
+        var book = (await _unitOfWork.BookRepository.GetFull(id)) ?? throw new BookNotFoundException(id);
+
+        if (book.IssuedBooks.Any(x => x.IsDeleted == false))
+        {
+            throw new YouCanNotDeleteBookBecauseThereAreCopiesIssuedException(book.Id);
+        }
 
         book.IsDeleted = true;
 
@@ -136,8 +141,7 @@ public class BookService : IBookService
             Author = book.Author,
             CountCopies = book.CountCopies,
             Name = book.Name,
-            YearPublication = book.YearPublication,
-            IsDeleted = book.IsDeleted
+            YearPublication = book.YearPublication
         };
     }
 
@@ -180,7 +184,7 @@ public class BookService : IBookService
         }
     }
 
-    private void ValidationCountCopies(int countCopies)
+    private static void ValidationCountCopies(int countCopies)
     {
         if (countCopies < Book.MinCountCopies || countCopies > Book.MaxCountCopies)
         {

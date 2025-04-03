@@ -7,5 +7,4 @@ public class GetBookDto
     public required string Author { get; set; } = default!;
     public required int YearPublication { get; set; }
     public required int CountCopies { get; set; }
-    public required bool IsDeleted { get; set; }
 }

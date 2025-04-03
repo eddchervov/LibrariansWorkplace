@@ -9,5 +9,4 @@ public class GetReaderDto
     public required DateTime DateBirth { get; set; }
 
     public required IEnumerable<BookGivenToReaderDto> IssuedBooks { get; set; }
-    public required bool IsDeleted { get; set; }
 }

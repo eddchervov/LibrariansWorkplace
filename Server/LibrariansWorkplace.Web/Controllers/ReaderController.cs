@@ -15,6 +15,12 @@ public class ReaderController : ControllerBase
         _readerService = readerService;
     }
 
+    [HttpGet("options")]
+    public async Task<IEnumerable<ReaderOptionDto>> GetOptions()
+    {
+        return await _readerService.GetOptions();
+    }
+
     [HttpGet]
     public async Task<GetReaderDto> GetById(int readerId)
     {

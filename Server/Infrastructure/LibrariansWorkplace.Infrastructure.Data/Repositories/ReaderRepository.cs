@@ -20,17 +20,26 @@ public class ReaderRepository : IReaderRepository
 
     public Task<Reader?> Get(int id)
     {
+        return _context.Readers.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+    }
+
+    public Task<Reader?> GetFull(int id)
+    {
         return _context.Readers
             .Include(x => x.IssuedBooks).ThenInclude(x => x.Book)
             .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
     }
 
+    public async Task<IEnumerable<Reader>> GetAll()
+    {
+        return await _context.Readers.Where(x => x.IsDeleted == false).ToListAsync();
+    }
+
     public async Task<IEnumerable<Reader>> SearchByFullName(string search)
     {
-        var localSearch = search.Trim().ToLower();
         return await _context.Readers
             .Include(x => x.IssuedBooks).ThenInclude(x => x.Book)
-            .Where(x => x.IsDeleted == false && x.FullName.ToLower().Contains(localSearch))
+            .Where(x => x.IsDeleted == false && x.FullName.Contains(search, StringComparison.CurrentCultureIgnoreCase))
             .ToListAsync();
     }
 

@@ -21,11 +21,17 @@ public class BookRepository : IBookRepository
     public Task<Book?> Get(int id)
     {
         return _context.Books
+            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+    }
+
+    public Task<Book?> GetFull(int id)
+    {
+        return _context.Books
             .Include(x => x.IssuedBooks).ThenInclude(x => x.Reader)
             .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
     }
 
-    public async Task<IEnumerable<Book>> Get()
+    public async Task<IEnumerable<Book>> GetFull()
     {
         return await _context.Books
             .Include(x => x.IssuedBooks)
@@ -37,8 +43,7 @@ public class BookRepository : IBookRepository
     {
         var localSearch = search.Trim().ToLower();
         return await _context.Books
-            .Include(x => x.IssuedBooks).ThenInclude(x => x.Book)
-            .Where(x => x.IsDeleted == false && x.Name.ToLower().Contains(localSearch))
+            .Where(x => x.IsDeleted == false && x.Name.Contains(localSearch, StringComparison.CurrentCultureIgnoreCase))
             .ToListAsync();
     }
 

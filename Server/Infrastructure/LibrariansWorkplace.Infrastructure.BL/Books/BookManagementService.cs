@@ -23,7 +23,7 @@ public class BookManagementService : IBookManagementService
         // Добавляем пока что, только по 1 книги
         int countAdded = 1;
 
-        var book = (await _unitOfWork.BookRepository.Get(dto.BookId) ?? throw new BookNotFoundException(dto.BookId));
+        var book = (await _unitOfWork.BookRepository.GetFull(dto.BookId) ?? throw new BookNotFoundException(dto.BookId));
         var reader = (await _unitOfWork.ReaderRepository.Get(dto.ReaderId)) ?? throw new ReaderNotFoundException(dto.ReaderId);
 
         var countIssuedBooks = book.IssuedBooks.Where(x => x.IsDeleted == false).Sum(x => x.Count) + countAdded;
@@ -49,7 +49,7 @@ public class BookManagementService : IBookManagementService
     public async Task ReturnBookToLibrary(ReturnBookToLibraryDto dto)
     {
         var book = (await _unitOfWork.BookRepository.Get(dto.BookId) ?? throw new BookNotFoundException(dto.BookId));
-        var reader = (await _unitOfWork.ReaderRepository.Get(dto.ReaderId)) ?? throw new ReaderNotFoundException(dto.ReaderId);
+        var reader = (await _unitOfWork.ReaderRepository.GetFull(dto.ReaderId)) ?? throw new ReaderNotFoundException(dto.ReaderId);
 
         // берем любую попавшуюся
         var issuedBook = reader.IssuedBooks.FirstOrDefault(x => x.BookId == book.Id && x.IsDeleted == false) 
