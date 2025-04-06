@@ -84,7 +84,7 @@
         <div class="col-auto">
           <button
             class="btn btn-success me-3"
-            :disabled="isSaveForm"
+            :disabled="isSaveForm || !readerId || filterIssuedBooks.length == 0"
             @click="save()"
           >
             Принять книгу
@@ -134,6 +134,8 @@ export default defineComponent({
   },
   methods: {
     async save(): Promise<void> {
+      if (!this.readerId || this.filterIssuedBooks.length == 0) return
+
       this.isSaveForm = true
 
       await this.$store.dispatch("returnBookToLibrary", {
