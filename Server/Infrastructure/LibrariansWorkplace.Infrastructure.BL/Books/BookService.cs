@@ -18,6 +18,12 @@ public class BookService : IBookService
         _unitOfWork = unitOfWork;
     }
 
+    public async Task<IEnumerable<BookOptionDto>> GetOptions()
+    {
+        var books = await _unitOfWork.BookRepository.GetAll();
+        return books.Select(x => new BookOptionDto { Id = x.Id, Name = $"{x.Name}, {x.Author}, {x.YearPublication} г." }).OrderBy(x => x.Name);
+    }
+
     public async Task<GetBookDto> GetById(int id)
     {
         var book = (await _unitOfWork.BookRepository.Get(id)) ?? throw new BookNotFoundException(id);

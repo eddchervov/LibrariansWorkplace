@@ -2,6 +2,7 @@
 
 public class ReaderOptionDto
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = default!;
+    public required int Id { get; set; }
+    public required string Name { get; set; }
+    public required DateTime DateBirth { get; set; }
 }

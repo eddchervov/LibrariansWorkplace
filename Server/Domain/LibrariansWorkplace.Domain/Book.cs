@@ -14,7 +14,7 @@ public class Book
 
 
     public static int MinCountCopies = 1;
-    public static int MaxCountCopies = 100;
+    public static int MaxCountCopies = 10000000;
 
-    public static int MinYearPublication = 2000;
+    public static int MinYearPublication = 1;
 }

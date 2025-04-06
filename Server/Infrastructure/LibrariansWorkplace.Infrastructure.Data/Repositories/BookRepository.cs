@@ -24,6 +24,13 @@ public class BookRepository : IBookRepository
             .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
     }
 
+    public async Task<IEnumerable<Book>> GetAll()
+    {
+        return await _context.Books
+            .Where(x => x.IsDeleted == false)
+            .ToListAsync();
+    }
+
     public Task<Book?> GetFull(int id)
     {
         return _context.Books

@@ -15,7 +15,13 @@ public class BookController : ControllerBase
         _bookService = bookService;
     }
 
-    [HttpGet]
+    [HttpGet("options")]
+    public async Task<IEnumerable<BookOptionDto>> GetOptions()
+    {
+        return await _bookService.GetOptions();
+    }
+
+    [HttpGet("{bookId}")]
     public async Task<GetBookDto> GetById(int bookId)
     {
         return await _bookService.GetById(bookId);

@@ -19,7 +19,7 @@ public class ReaderService : IReaderService
     public async Task<IEnumerable<ReaderOptionDto>> GetOptions()
     {
         var readers = await _unitOfWork.ReaderRepository.GetAll();
-        return readers.Select(x => new ReaderOptionDto { Id = x.Id, Name = x.FullName }).OrderBy(x => x.Name);
+        return readers.Select(x => new ReaderOptionDto { Id = x.Id, Name = x.FullName, DateBirth = x.DateBirth }).OrderBy(x => x.Name);
     }
 
     public async Task<GetReaderDto> GetById(int id)
@@ -46,7 +46,7 @@ public class ReaderService : IReaderService
 
         var reader = new Reader
         {
-            DateBirth = dto.DateBirth,
+            DateBirth = dto.DateBirth.ToUniversalTime(),
             FullName = dto.FullName
         };
 
@@ -63,7 +63,7 @@ public class ReaderService : IReaderService
 
         var reader = (await _unitOfWork.ReaderRepository.Get(readerId)) ?? throw new ReaderNotFoundException(readerId);
 
-        reader.DateBirth = dto.DateBirth;
+        reader.DateBirth = dto.DateBirth.ToUniversalTime();
         reader.FullName = dto.FullName;
 
         await _unitOfWork.ReaderRepository.Save();

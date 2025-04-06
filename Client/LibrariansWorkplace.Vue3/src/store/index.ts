@@ -22,15 +22,22 @@ export default new Vuex.Store({
     availableBooks: new Array<GetAvailableBooksDto>(),
     foundBooks: new Array<GetBookDto>(),
     readerOptions: new Array<Option>(),
+    bookOptions: new Array<Option>(),
     selectedBook: null,
     selectedReader: null,
+    bookManagementTab: "list"
   },
   getters: {
     issuedBooks: (state) => state.issuedBooks,
     availableBooks: (state) => state.availableBooks,
-    selectedBook: (state) => state.selectedBook
+    selectedBook: (state) => state.selectedBook,
+    bookOptions: (state) => state.bookOptions,
+    bookManagementTab: (state) => state.bookManagementTab
   },
   mutations: {
+    setBookManagementTab: (state, tab) => {
+      state.bookManagementTab = tab
+    },
     setIssuedBooks: (state, issuedBooks) => {
       state.issuedBooks = issuedBooks;
     },
@@ -40,6 +47,12 @@ export default new Vuex.Store({
     },
     setFoundBooks: (state, books) => {
       state.foundBooks = books;
+    },
+    setBookOptions: (state, books) => {
+      state.bookOptions = books;
+    },
+    addBookOption: (state, book) => {
+      state.bookOptions.push(book);
     },
     setReaderOptions: (state, readers) => {
       state.readerOptions = readers;
@@ -68,9 +81,24 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    loadBookManagement({ commit }) {
+      this.dispatch('getBookOptions')
+    },
     loadBooksPage({ commit }) {
       this.dispatch("getIssuedBooks") 
       this.dispatch("getAvailableBooks")
+    },
+
+    
+    async getBookOptions({ commit }) {
+      axios
+        .get(serverPath + "/books/options")
+        .then((p) => {
+          commit("setBookOptions", p.data);
+        })
+        .catch((e) => {
+          alert("Произошла ошибка получения списка книг");
+        });
     },
     async giveBookToReader({ commit }, dto: GiveBookToReaderDto) {
       axios
@@ -152,6 +180,10 @@ export default new Vuex.Store({
       axios
         .post(serverPath + "/books", dto)
         .then((p) => {
+          commit("addBookOption", {
+            id: p.data.id,
+            name: `${dto.name}, ${dto.author} ${dto.yearPublication} г.`,
+          });
           // по ui не понятно, какие списки и для чего
           this.dispatch("getIssuedBooks");
           this.dispatch("getAvailableBooks");

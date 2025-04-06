@@ -116,66 +116,7 @@
         </table>
       </template>
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#staticBackdrop"
-      >
-        Launch static backdrop modal
-      </button>
 
-      <div
-        class="modal fade"
-        id="staticBackdrop"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog">
-          <div class="modal-content" v-if="$store.getters.selectedBook">
-            <div class="modal-header">
-              <h5 class="modal-title" id="staticBackdropLabel">
-                <template v-if="$store.getters.selectedBook.id">
-                  Редактирование книги
-                </template>
-                <template v-else>
-                  Создание книги
-                </template>
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body">
-       
-
-
-
-
-
-
-
-
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                Закрыть
-              </button>
-              <button type="button" class="btn btn-primary">Сохранить</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </template>
 
     <template v-else>
@@ -199,13 +140,16 @@ export default class Books extends Vue {
   isLoadForm = true;
   tab: "issuedBooks" | "availableBooks" = "availableBooks";
 
+  // openCreateModal() {
 
+  // }
 
-  closeModal() {
-    // костыль на бустрап окно, так как нужно плагин использовать либо jquery
-    document.getElementById("staticBackdrop").style.display = "none";
-    document.querySelector(".modal-backdrop").remove();
-  }
+  // closeModal() {
+  //   // костыль на бустрап окно, так как нужно плагин использовать либо jquery
+  //   // document.getElementById("staticBackdrop").style.display = "none";
+  //   // document.querySelector(".modal-backdrop").remove();
+  // }
+
 
   async mounted(): Promise<void> {
     await this.$store.dispatch("loadBooksPage");

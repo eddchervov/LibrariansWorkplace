@@ -21,7 +21,7 @@ public class ReaderController : ControllerBase
         return await _readerService.GetOptions();
     }
 
-    [HttpGet]
+    [HttpGet("{readerId}")]
     public async Task<GetReaderDto> GetById(int readerId)
     {
         return await _readerService.GetById(readerId);
@@ -36,7 +36,17 @@ public class ReaderController : ControllerBase
     [HttpPost]
     public async Task<int> Create([FromBody] CreateReaderDto request)
     {
+        try
+        {
+
+       
         return await _readerService.Create(request);
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
     }
 
     [HttpPut("{readerId}")]

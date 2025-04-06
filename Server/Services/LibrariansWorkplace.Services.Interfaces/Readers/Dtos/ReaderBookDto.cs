@@ -2,8 +2,8 @@
 
 public class ReaderBookDto
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = default!;
-    public string Author { get; set; } = default!;
-    public int YearPublication { get; set; }
+    public required int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Author { get; set; } 
+    public required int YearPublication { get; set; }
 }

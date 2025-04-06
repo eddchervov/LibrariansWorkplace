@@ -2,6 +2,6 @@
 
 public class UpdateReaderDto
 {
-    public required string FullName { get; set; } = default!;
+    public required string FullName { get; set; } 
     public required DateTime DateBirth { get; set; }
 }

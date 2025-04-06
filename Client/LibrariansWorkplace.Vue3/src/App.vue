@@ -22,6 +22,9 @@
             <li class="nav-item">
               <router-link to="/books" class="nav-link"> Книги </router-link>
             </li>
+            <li class="nav-item">
+              <router-link to="/book-management" class="nav-link"> Управление книгами </router-link>
+            </li>
           </ul>
         </div>
       </div>

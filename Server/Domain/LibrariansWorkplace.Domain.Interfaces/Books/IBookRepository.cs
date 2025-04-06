@@ -5,6 +5,7 @@ public interface IBookRepository
     Task<Book?> Get(int id);
     Task<Book?> GetFull(int id);
     Task<IEnumerable<Book>> GetFull();
+    Task<IEnumerable<Book>> GetAll();
     Task<IEnumerable<Book>> SearchByName(string search);
     Task Add(Book book);
     Task Save();
