@@ -1,8 +1,8 @@
 «API Рабочего Места Библиотекаря».
-1. Entity Framework (>= 7).
-2. PostgreSQL (>= 15).
+1. Microsoft Entity Framework Core (9.0.3).
+2. PostgreSQL 17).
 3. VUE 3.
-4. BACK-END – WebAPI (.NET >= 7).
+4. BACK-END – WebAPI (.NET 9).
 
 Тестовое задание
 1.	API реализует следующие методы:
