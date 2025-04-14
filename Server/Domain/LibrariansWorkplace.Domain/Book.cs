@@ -11,10 +11,4 @@ public class Book
     public List<IssuedBook> IssuedBooks { get; set; } = [];
 
     public bool IsDeleted { get; set; }
-
-
-    public static int MinCountCopies = 1;
-    public static int MaxCountCopies = 10000000;
-
-    public static int MinYearPublication = 1;
 }

@@ -16,10 +16,7 @@ public sealed class AppDbContext : DbContext
 #nullable restore
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-        Database.EnsureCreated();
-    }
+        : base(options) { }
 
     public void BeginTransaction()
     {

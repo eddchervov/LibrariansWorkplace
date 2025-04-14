@@ -1,102 +1,54 @@
 ﻿using LibrariansWorkplace.Domain;
 using LibrariansWorkplace.Domain.Interfaces;
+using LibrariansWorkplace.Infrastructure.BL.Books.Expressions;
+using LibrariansWorkplace.Infrastructure.BL.Books.Validations;
 using LibrariansWorkplace.Services.Interfaces.Books;
 using LibrariansWorkplace.Services.Interfaces.Books.Dtos;
 using LibrariansWorkplace.Services.Interfaces.Books.Exceptions;
 using LibrariansWorkplace.Services.Interfaces.Common.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibrariansWorkplace.Infrastructure.BL.Books;
 
-public class BookService : IBookService
+public class BookService(ISystemClock systemClock, IUnitOfWork unitOfWork) : IBookService
 {
-    private readonly ISystemClock _systemClock;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public BookService(ISystemClock systemClock, IUnitOfWork unitOfWork)
-    {
-        _systemClock = systemClock;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly ISystemClock _systemClock = systemClock;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IEnumerable<BookOptionDto>> GetOptions()
-    {
-        var books = await _unitOfWork.BookRepository.GetAll();
-        return books.Select(x => new BookOptionDto { Id = x.Id, Name = $"{x.Name}, {x.Author}, {x.YearPublication} г." }).OrderBy(x => x.Name);
-    }
+        => await _unitOfWork.BookRepository.Get(ExpressionHelper.MapToBookOptionDtoExpr).OrderBy(x => x.Name).ToListAsync();
 
-    public async Task<GetBookDto> GetById(int id)
-    {
-        var book = (await _unitOfWork.BookRepository.Get(id)) ?? throw new BookNotFoundException(id);
-
-        return MapToDto(book);
-    }
+    public async Task<GetBookDto> GetById(int bookId)
+        => (await _unitOfWork.BookRepository.Get(bookId, ExpressionHelper.MapToGetBookDtoExpr))
+        ?? throw new BookNotFoundException(bookId);
 
     public async Task<IEnumerable<GetBookDto>> SearchByName(string search)
     {
-        if (string.IsNullOrEmpty(search)) return [];
+        if (string.IsNullOrEmpty(search.Trim())) return [];
 
-        var books = await _unitOfWork.BookRepository.SearchByName(search);
-
-        return books.Select(MapToDto);
+        return await _unitOfWork.BookRepository
+            .SearchByName(search)
+            .Select(ExpressionHelper.MapToGetBookDtoExpr)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<GetIssuedBooksDto>> GetIssuedBooks()
-    {
-        var books = await _unitOfWork.BookRepository.GetFull();
-
-        var result = new List<GetIssuedBooksDto>();
-        foreach (var book in books) 
-        {
-            var countIssuedBooks = book.IssuedBooks.Where(x => x.IsDeleted == false).Sum(x => x.Count);
-            if (countIssuedBooks > 0)
-            {
-                result.Add(new GetIssuedBooksDto
-                {
-                    Id = book.Id,
-                    Author = book.Author,
-                    CountCopies = book.CountCopies,
-                    CountIssuedBooks = countIssuedBooks,
-                    Name = book.Name,
-                    YearPublication = book.YearPublication
-                });
-            }
-        }
-
-        return result;
-    }
+        => await _unitOfWork.BookRepository
+            .Get(ExpressionHelper.MapToGetIssuedBooksDtoExpr)
+            .Where(x => x.CountIssuedBooks > 0)
+            .ToListAsync();
 
     public async Task<IEnumerable<GetAvailableBooksDto>> GetAvailableBooks()
-    {
-        var books = await _unitOfWork.BookRepository.GetFull();
-
-        var result = new List<GetAvailableBooksDto>();
-        foreach (var book in books)
-        {
-            var countIssuedBooks = book.IssuedBooks.Where(x => x.IsDeleted == false).Sum(x => x.Count);
-            var countAvailableBooks = book.CountCopies - countIssuedBooks;
-
-            if (countAvailableBooks > 0)
-            {
-                result.Add(new GetAvailableBooksDto
-                {
-                    Id = book.Id,
-                    Author = book.Author,
-                    CountCopies = book.CountCopies,
-                    CountAvailableBooks = countAvailableBooks,
-                    Name = book.Name,
-                    YearPublication = book.YearPublication
-                });
-            }
-        }
-
-        return result;
-    }
+        => await _unitOfWork.BookRepository
+            .Get(ExpressionHelper.MapToGetAvailableBooksDtoExpr)
+            .Where(x => x.CountAvailableBooks > 0)
+            .ToListAsync();
 
     public async Task<int> Create(CreateBookDto dto)
     {
-        ValidationOnCreation(dto);
+        ValidationHelper.ValidationOnCreation(dto, _systemClock);
 
-        var book = new Book 
+        var book = new Book
         {
             Author = dto.Author,
             CountCopies = dto.CountCopies,
@@ -113,9 +65,13 @@ public class BookService : IBookService
 
     public async Task Update(int bookId, UpdateBookDto dto)
     {
-        var book = (await _unitOfWork.BookRepository.GetFull(bookId)) ?? throw new BookNotFoundException(bookId);
+        var book = (await _unitOfWork.BookRepository.Get(bookId, ExpressionHelper.MapToBookExpr)) 
+            ?? throw new BookNotFoundException(bookId);
+        var countBooksIssued = await _unitOfWork.IssuedBooksRepository
+            .GetByBookId(book.Id)
+            .SumAsync(x => x.Count);
 
-        ValidationOnUpdate(dto, book);
+        ValidationHelper.ValidationOnUpdate(dto, book, countBooksIssued, _systemClock);
 
         book.Author = dto.Author;
         book.CountCopies = dto.CountCopies;
@@ -125,84 +81,19 @@ public class BookService : IBookService
         await _unitOfWork.BookRepository.Save();
     }
 
-    public async Task Delete(int id)
+    public async Task Delete(int bookId)
     {
-        var book = (await _unitOfWork.BookRepository.GetFull(id)) ?? throw new BookNotFoundException(id);
+        var book = (await _unitOfWork.BookRepository.Get(bookId, ExpressionHelper.MapToBookExpr)) 
+            ?? throw new BookNotFoundException(bookId);
 
-        if (book.IssuedBooks.Any(x => x.IsDeleted == false))
-        {
-            throw new YouCanNotDeleteBookBecauseThereAreCopiesIssuedException(book.Id);
-        }
+        var existBooksIssued = await _unitOfWork.IssuedBooksRepository
+           .GetByBookId(book.Id)
+           .AnyAsync();
+
+        if (existBooksIssued) throw new YouCanNotDeleteBookBecauseThereAreCopiesIssuedException(book.Id);
 
         book.IsDeleted = true;
 
         await _unitOfWork.BookRepository.Save();
-    }
-
-    private static GetBookDto MapToDto(Book book)
-    {
-        return new GetBookDto
-        {
-            Id = book.Id,
-            Author = book.Author,
-            CountCopies = book.CountCopies,
-            Name = book.Name,
-            YearPublication = book.YearPublication
-        };
-    }
-
-    private void ValidationOnUpdate(UpdateBookDto dto, Book book)
-    {
-        var countBooksIssued = book.IssuedBooks.Where(x => x.IsDeleted == false).Sum(x => x.Count);
-
-        if (countBooksIssued > book.CountCopies)
-        {
-            throw new IndicatedCountCopiesLessThanIssuedException(countBooksIssued, book.CountCopies);
-        }
-
-        ValidationName(dto.Name);
-        ValidationAuthor(dto.Author);
-        ValidationCountCopies(dto.CountCopies);
-        ValidationYearPublication(dto.YearPublication);
-    }
-
-    private void ValidationOnCreation(CreateBookDto dto)
-    {
-        ValidationName(dto.Name);
-        ValidationAuthor(dto.Author);
-        ValidationCountCopies(dto.CountCopies);
-        ValidationYearPublication(dto.YearPublication);
-    }
-
-    private static void ValidationName(string name)
-    {
-        if (string.IsNullOrEmpty(name.Trim()))
-        {
-            throw new EmptyValueException(nameof(name));
-        }
-    }
-
-    private static void ValidationAuthor(string author)
-    {
-        if (string.IsNullOrEmpty(author.Trim()))
-        {
-            throw new EmptyValueException(nameof(author));
-        }
-    }
-
-    private static void ValidationCountCopies(int countCopies)
-    {
-        if (countCopies < Book.MinCountCopies || countCopies > Book.MaxCountCopies)
-        {
-            throw new CountCopiesOutOfRangeException(countCopies);
-        }
-    }
-
-    private void ValidationYearPublication(int yearPublication)
-    {
-        if (yearPublication < Book.MinYearPublication || yearPublication > _systemClock.UtcNow.Year)
-        {
-            throw new YearPublicationOutOfRangeException(yearPublication, _systemClock.UtcNow.Year);
-        }
     }
 }

@@ -8,7 +8,4 @@ public class Reader
 
     public List<IssuedBook> IssuedBooks { get; set; } = [];
     public bool IsDeleted { get; set; }
-
-    public static DateTime MinDateBirth => new DateTime(1900, 1, 1);
-    public static DateTime MaxDateBirth => new DateTime(2010, 1, 1);
 }

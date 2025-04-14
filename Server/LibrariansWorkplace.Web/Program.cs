@@ -1,15 +1,16 @@
 using LibrariansWorkplace.Domain;
 using LibrariansWorkplace.Domain.Interfaces;
+using LibrariansWorkplace.Domain.Interfaces.IssuedBooks;
 using LibrariansWorkplace.Infrastructure.BL;
 using LibrariansWorkplace.Infrastructure.BL.Books;
 using LibrariansWorkplace.Infrastructure.BL.Readers;
 using LibrariansWorkplace.Infrastructure.Data;
+using LibrariansWorkplace.Infrastructure.Data.Repositories;
 using LibrariansWorkplace.Services.Interfaces.Books;
 using LibrariansWorkplace.Services.Interfaces.Readers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using System.Reflection.Metadata;
 
 namespace LibrariansWorkplace.Web
 {
@@ -66,14 +67,20 @@ namespace LibrariansWorkplace.Web
             builder.Services.AddSingleton<ISystemClock, SystemClock>();
 
             builder.Services
-                //.AddTransient<IBookRepository, BookRepository>()
                 .AddTransient<IBookService, BookService>()
                 .AddTransient<IReaderService, ReaderService>()
                 .AddTransient<IBookManagementService, BookManagementService>()
                 .AddTransient<IUnitOfWork, UnitOfWork>()
+                .AddTransient<IIssuedBooksRepository, IssuedBooksRepository>()
                 ;
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.EnsureCreated();
+            }
 
             app.UseRouting();
             app.UseHttpsRedirection();

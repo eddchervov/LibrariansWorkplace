@@ -1,62 +1,57 @@
 ﻿using LibrariansWorkplace.Domain;
 using LibrariansWorkplace.Domain.Interfaces;
+using LibrariansWorkplace.Infrastructure.BL.Books.Expressions;
 using LibrariansWorkplace.Services.Interfaces.Books;
 using LibrariansWorkplace.Services.Interfaces.Books.Dtos;
 using LibrariansWorkplace.Services.Interfaces.Common.Exceptions;
 using LibrariansWorkplace.Services.Interfaces.Readers.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibrariansWorkplace.Infrastructure.BL.Books;
 
-public class BookManagementService : IBookManagementService
+public class BookManagementService(ISystemClock systemClock, IUnitOfWork unitOfWork) : IBookManagementService
 {
-    private readonly ISystemClock _systemClock;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public BookManagementService(ISystemClock systemClock, IUnitOfWork unitOfWork)
-    {
-        _systemClock = systemClock;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly ISystemClock _systemClock = systemClock;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task GiveBookToReader(GiveBookToReaderDto dto)
     {
         // Добавляем пока что, только по 1 книги
         int countAdded = 1;
 
-        var book = (await _unitOfWork.BookRepository.GetFull(dto.BookId) ?? throw new BookNotFoundException(dto.BookId));
-        var reader = (await _unitOfWork.ReaderRepository.Get(dto.ReaderId)) ?? throw new ReaderNotFoundException(dto.ReaderId);
+        if (await _unitOfWork.ReaderRepository.Any(dto.ReaderId) == false) throw new ReaderNotFoundException(dto.ReaderId);
+        var book = await _unitOfWork.BookRepository.Get(dto.BookId, ExpressionHelper.MapToBookExpr) ?? throw new BookNotFoundException(dto.BookId);
 
-        var countIssuedBooks = book.IssuedBooks.Where(x => x.IsDeleted == false).Sum(x => x.Count) + countAdded;
+        var countIssuedBooks = (await _unitOfWork.IssuedBooksRepository
+            .GetByBookId(dto.BookId)
+            .SumAsync(x => x.Count)) + countAdded;
 
         if (countIssuedBooks > book.CountCopies)
         {
             throw new ThereAreNoAvailableCopiesOfLookException(book.Id);
         }
 
-        book.IssuedBooks.Add(new IssuedBook 
+        book.IssuedBooks.Add(new IssuedBook
         {
-            Book = book,
             BookId = book.Id,
-            ReaderId = reader.Id,
-            Reader = reader,
+            ReaderId = dto.ReaderId,
             Count = countAdded,
             DateOfIssue = _systemClock.UtcNow
         });
 
-        await _unitOfWork.BookRepository.Save();
+        await _unitOfWork.IssuedBooksRepository.Save();
     }
 
     public async Task ReturnBookToLibrary(ReturnBookToLibraryDto dto)
     {
-        var book = (await _unitOfWork.BookRepository.Get(dto.BookId) ?? throw new BookNotFoundException(dto.BookId));
-        var reader = (await _unitOfWork.ReaderRepository.GetFull(dto.ReaderId)) ?? throw new ReaderNotFoundException(dto.ReaderId);
+        if (await _unitOfWork.BookRepository.Any(dto.BookId) == false) throw new BookNotFoundException(dto.BookId);
+        if (await _unitOfWork.ReaderRepository.Any(dto.ReaderId) == false) throw new ReaderNotFoundException(dto.ReaderId);
 
         // берем любую попавшуюся
-        var issuedBook = reader.IssuedBooks.FirstOrDefault(x => x.BookId == book.Id && x.IsDeleted == false) 
-            ?? throw new BookNotFoundForReaderException(dto.BookId);
+        var issuedBook = (await _unitOfWork.IssuedBooksRepository.GetBy(dto.ReaderId, dto.BookId)) ?? throw new BookNotFoundForReaderException(dto.BookId);
 
         issuedBook.IsDeleted = true;
 
-        await _unitOfWork.ReaderRepository.Save();
+        await _unitOfWork.IssuedBooksRepository.Save();
     }
 }

@@ -1,46 +1,43 @@
 ﻿using LibrariansWorkplace.Domain;
-using LibrariansWorkplace.Domain.Interfaces.Books;
+using LibrariansWorkplace.Domain.Interfaces.Readers;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace LibrariansWorkplace.Infrastructure.Data.Repositories;
 
-public class ReaderRepository : IReaderRepository
+public class ReaderRepository(AppDbContext context) : IReaderRepository
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context = context;
 
-    public ReaderRepository(AppDbContext context)
+    public Task<T?> Get<T>(int id, Expression<Func<Reader, T>> mapExpr) where T : class
     {
-        _context = context;
+        return _context.Readers
+            .Where(x => x.Id == id && x.IsDeleted == false)
+            .Select(mapExpr)
+            .FirstOrDefaultAsync();
+    }
+
+    public IQueryable<T> Get<T>(Expression<Func<Reader, T>> mapExpr) where T : class
+    {
+        return _context.Readers
+            .Where(x => x.IsDeleted == false)
+            .Select(mapExpr);
+    }
+
+    public async Task<bool> Any(int id)
+    {
+        return await _context.Readers.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+    }
+
+    public IQueryable<Reader> SearchByFullName(string search)
+    {
+        var localSearch = search.Trim().ToLower();
+        return _context.Readers.Where(x => x.IsDeleted == false && EF.Functions.ILike(x.FullName, $"%{localSearch}%"));
     }
 
     public async Task Add(Reader reader)
     {
         await _context.Readers.AddAsync(reader);
-    }
-
-    public Task<Reader?> Get(int id)
-    {
-        return _context.Readers.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
-    }
-
-    public Task<Reader?> GetFull(int id)
-    {
-        return _context.Readers
-            .Include(x => x.IssuedBooks).ThenInclude(x => x.Book)
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
-    }
-
-    public async Task<IEnumerable<Reader>> GetAll()
-    {
-        return await _context.Readers.Where(x => x.IsDeleted == false).ToListAsync();
-    }
-
-    public async Task<IEnumerable<Reader>> SearchByFullName(string search)
-    {
-        return await _context.Readers
-            .Include(x => x.IssuedBooks).ThenInclude(x => x.Book)
-            .Where(x => x.IsDeleted == false && x.FullName.Contains(search, StringComparison.CurrentCultureIgnoreCase))
-            .ToListAsync();
     }
 
     public async Task Save()

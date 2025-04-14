@@ -1,57 +1,43 @@
 ﻿using LibrariansWorkplace.Domain;
 using LibrariansWorkplace.Domain.Interfaces.Books;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace LibrariansWorkplace.Infrastructure.Data.Repositories;
 
-public class BookRepository : IBookRepository
+public class BookRepository(AppDbContext context) : IBookRepository
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context = context;
 
-    public BookRepository(AppDbContext context)
+    public Task<T?> Get<T>(int id, Expression<Func<Book, T>> mapExpr) where T: class
     {
-        _context = context;
+        return _context.Books
+            .Where(x => x.Id == id && x.IsDeleted == false)
+            .Select(mapExpr)
+            .FirstOrDefaultAsync();
+    }
+
+    public IQueryable<T> Get<T>(Expression<Func<Book, T>> mapExpr) where T : class
+    {
+        return _context.Books
+            .Where(x => x.IsDeleted == false)
+            .Select(mapExpr);
+    }
+
+    public async Task<bool> Any(int id)
+    {
+        return await _context.Books.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+    }
+
+    public IQueryable<Book> SearchByName(string search)
+    {
+        var localSearch = search.Trim().ToLower();
+        return _context.Books.Where(x => x.IsDeleted == false && EF.Functions.ILike(x.Name, $"%{localSearch}%"));
     }
 
     public async Task Add(Book book)
     {
         await _context.Books.AddAsync(book);
-    }
-
-    public Task<Book?> Get(int id)
-    {
-        return _context.Books
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
-    }
-
-    public async Task<IEnumerable<Book>> GetAll()
-    {
-        return await _context.Books
-            .Where(x => x.IsDeleted == false)
-            .ToListAsync();
-    }
-
-    public Task<Book?> GetFull(int id)
-    {
-        return _context.Books
-            .Include(x => x.IssuedBooks).ThenInclude(x => x.Reader)
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
-    }
-
-    public async Task<IEnumerable<Book>> GetFull()
-    {
-        return await _context.Books
-            .Include(x => x.IssuedBooks)
-            .Where(x => x.IsDeleted == false)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Book>> SearchByName(string search)
-    {
-        var localSearch = search.Trim().ToLower();
-        return await _context.Books
-            .Where(x => x.IsDeleted == false && x.Name.Contains(localSearch, StringComparison.CurrentCultureIgnoreCase))
-            .ToListAsync();
     }
 
     public async Task Save()
