@@ -1,7 +1,7 @@
-<a href="http://46.180.95.110:1325/" target="_blank">DEMO</a>
-
-
 «API Рабочего Места Библиотекаря».
+
+<a target="_blank" href="http://46.180.95.110:1325/">DEMO</a>
+
 1. Microsoft Entity Framework Core (9.0.3).
 2. PostgreSQL 17).
 3. VUE 3.
