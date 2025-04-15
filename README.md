@@ -1,4 +1,4 @@
-<a href="http://46.180.95.110:1325/" _target="blank">DEMO</a>
+<a href="http://46.180.95.110:1325/" target="_blank">DEMO</a>
 
 
 «API Рабочего Места Библиотекаря».
