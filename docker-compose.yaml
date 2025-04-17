@@ -1,0 +1,20 @@
+# docker-compose up -d --always-recreate-deps
+
+version: "1.0"
+
+name: librarians-workplace
+
+services:
+  librarians-workplace-web:
+    image: ${DOCKER_REGISTRY-}librarians-workplace-web
+    build:
+      context: .
+      dockerfile: Server/Dockerfile
+    ports:
+      - 5005:5005
+  librarians-workplace-vue3-client:
+    image: ${DOCKER_REGISTRY-}librarians-workplace-vue3-client
+    build:
+      dockerfile: Client/librarians-workplace/Dockerfile
+    ports:
+      - 1325:80
