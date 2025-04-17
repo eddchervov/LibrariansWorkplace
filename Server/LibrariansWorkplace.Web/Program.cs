@@ -74,6 +74,8 @@ namespace LibrariansWorkplace.Web
                 .AddTransient<IIssuedBooksRepository, IssuedBooksRepository>()
                 ;
 
+            builder.WebHost.UseUrls("http://*:5005");
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -93,7 +95,7 @@ namespace LibrariansWorkplace.Web
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
+            
             app.Run();
         }
     }

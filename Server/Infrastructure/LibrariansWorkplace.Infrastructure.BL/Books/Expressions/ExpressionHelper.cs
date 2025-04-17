@@ -38,7 +38,7 @@ public class ExpressionHelper
     public static readonly Expression<Func<Book, BookOptionDto>> MapToBookOptionDtoExpr = book => new BookOptionDto
     {
         Id = book.Id,
-        Name = $"{book.Name}, {book.Author}, {book.YearPublication} г."
+        Name = book.Name + ", " + book.Author + ", " + book.YearPublication + " г."
     };
 
 

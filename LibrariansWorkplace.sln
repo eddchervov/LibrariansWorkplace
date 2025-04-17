@@ -23,6 +23,34 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibrariansWorkplace.Infrast
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibrariansWorkplace.Web", "Server\LibrariansWorkplace.Web\LibrariansWorkplace.Web.csproj", "{7F4DAD79-6458-417B-BE05-54849D65A1DB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server Items", "Server Items", "{378BDD7B-3D99-4497-B2F8-6248432C2EC8}"
+	ProjectSection(SolutionItems) = preProject
+		Server\Dockerfile = Server\Dockerfile
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{E56B8927-413C-40C7-92EE-B7FF4EE3DD16}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "librarians-workplace", "Client\librarians-workplace\", "{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_62112"
+		Debug.AspNetCompiler.PhysicalPath = "Client\librarians-workplace\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_62112\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_62112"
+		Release.AspNetCompiler.PhysicalPath = "Client\librarians-workplace\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_62112\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "62112"
+		SlnRelativePath = "Client\librarians-workplace\"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +81,10 @@ Global
 		{7F4DAD79-6458-417B-BE05-54849D65A1DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F4DAD79-6458-417B-BE05-54849D65A1DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F4DAD79-6458-417B-BE05-54849D65A1DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +99,8 @@ Global
 		{38C8818F-E66A-4329-B0A2-FAF2481B79DA} = {36D1BDF3-A748-4D83-B2CE-5064B8FD06B7}
 		{CC9F6362-A77F-493A-A598-D16928F0DD9B} = {36D1BDF3-A748-4D83-B2CE-5064B8FD06B7}
 		{7F4DAD79-6458-417B-BE05-54849D65A1DB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{378BDD7B-3D99-4497-B2F8-6248432C2EC8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{C2A6ED1A-D51F-7447-4F6A-F2EA52CB8F36} = {E56B8927-413C-40C7-92EE-B7FF4EE3DD16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1AA5FD1A-5AD1-481C-8CB8-75BCBC97471C}
